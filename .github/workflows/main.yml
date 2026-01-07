@@ -1,0 +1,58 @@
+name: Build Lambda Layer (pdf2image + poppler)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y poppler-utils zip
+
+      - name: Build Lambda layer
+        run: |
+          set -e
+
+          rm -rf python bin lambda-layer.zip
+          mkdir -p python bin
+
+          # ----------------------------
+          # Python packages
+          # ----------------------------
+          pip install --upgrade pip
+          pip install \
+            pdf2image \
+            pillow \
+            -t python/
+
+          # ----------------------------
+          # Copy poppler binaries
+          # ----------------------------
+          cp /usr/bin/pdfinfo bin/
+          cp /usr/bin/pdftoppm bin/
+
+          chmod +x bin/*
+
+          # ----------------------------
+          # Zip layer
+          # ----------------------------
+          zip -r lambda-layer.zip python bin
+
+      - name: Upload layer artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lambda-layer
+          path: lambda-layer.zip
+ 
