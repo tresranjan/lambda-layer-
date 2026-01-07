@@ -33,7 +33,7 @@ jobs:
           # ----------------------------
           pip install --upgrade pip
           pip install \
-            pdf2image \
+            pymupdf \
             pillow \
             -t python/
 
